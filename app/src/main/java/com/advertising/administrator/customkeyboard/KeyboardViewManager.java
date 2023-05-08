@@ -212,11 +212,12 @@ public class KeyboardViewManager implements KeyboardView.OnKeyboardActionListene
                 keyboardView.setKeyboard(keyboardEnglish);
                 break;
             case -2://字母和数字切换按钮
-                if (currentEditText.getInputType() == 2 && keyboardView.getKeyboard() == keyboardNumber) {
-                    Toast.makeText(context, "只能输入数字", Toast.LENGTH_SHORT).show();
-                } else {
-                    shiftKeyboard();
-                }
+//                if (currentEditText.getInputType() == 2 && keyboardView.getKeyboard() == keyboardNumber) {
+//                    Toast.makeText(context, "只能输入数字", Toast.LENGTH_SHORT).show();
+//                } else {
+//                    shiftKeyboard();
+//                }
+                hideSoftKeyboard();
                 break;
 
             case -4://完成按钮
