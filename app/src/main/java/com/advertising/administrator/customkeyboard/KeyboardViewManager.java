@@ -42,7 +42,7 @@ public class KeyboardViewManager implements KeyboardView.OnKeyboardActionListene
     private final Keyboard keyboardEnglish;
     private final Keyboard keyboardNumber;
     //标识英文键盘大小写切换
-    private boolean isCapital = false;
+    private boolean isCapital = true;
     private final KeyboardView keyboardView;
     //标识数字键盘和英文键盘的切换
     private boolean isShift;
@@ -91,7 +91,9 @@ public class KeyboardViewManager implements KeyboardView.OnKeyboardActionListene
     private void showSoftKeyboard() {
         //根据设置的输入类型，动态切换键盘
         int inputType = currentEditText.getInputType();
-        if (inputType == 2) {
+        Log.e("输入类型inputType=",inputType+"");
+
+        if (inputType == 2||inputType==2002||inputType==8194) {
             keyboardView.setKeyboard(keyboardNumber);
             isShift = true;
         } else {
@@ -164,6 +166,8 @@ public class KeyboardViewManager implements KeyboardView.OnKeyboardActionListene
             });
 
         }
+      //  currentEditText.setFocusable(false);
+        currentEditText.clearFocus();
     }
 
 
