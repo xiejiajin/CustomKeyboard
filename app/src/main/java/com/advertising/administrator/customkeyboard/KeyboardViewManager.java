@@ -6,22 +6,20 @@ import android.graphics.Rect;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.Toast;
-
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,27 +66,64 @@ public class KeyboardViewManager implements KeyboardView.OnKeyboardActionListene
             key.setOnFocusChangeListener(new View.OnFocusChangeListener() {
                 @Override
                 public void onFocusChange(View view, boolean b) {
+
+                    Log.e("焦点：",b+"");
+
                     if (b) {
+//                        ((EditText)view).setCursorVisible(true);
+//                        ((EditText)view).requestFocus(); // 让光标得到焦点
+//                        ((EditText)view).setSelection(((EditText)view).getText().length()); // 将光标置于文本的末尾
+
                         if (showSystem.contains(view)) {
+                            Log.e("焦点：","隐藏自定义键盘");
                             hideSoftKeyboard();
                             currentEditText = (EditText) view;
+
+                            InputMethodManager inputMethodManager = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+
+                           // currentEditText.setInputType(InputType.TYPE_NULL); // 切换到纯文本输入模式
+                            inputMethodManager.showSoftInput(currentEditText, InputType.TYPE_CLASS_TEXT); // 显示系统键盘
+
+//                            currentEditText.setCursorVisible(true);
+//                            currentEditText.requestFocus(); // 让光标得到焦点
+//                            currentEditText.setSelection(currentEditText.getText().length()); // 将光标置于文本的末尾
                         } else {
+                            Log.e("焦点：","显示自定义键盘");
+                           // showCursor(currentEditText);
                             currentEditText = (EditText) view;
-                            currentEditText.setCursorVisible(true);
                             SystemSoftKeyUtils.hideSoftInput(context, view);
                             showSoftKeyboard();
                         }
 
+                        currentEditText.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                showCursor(currentEditText);
+                            }
+                        }, 300);
+
                     }
+                    Log.e("焦点：","22="+currentEditText.hasFocus());
+
+//                    if(!currentEditText.hasFocus()){
+//                        hideSoftKeyboard();
+//                    }
+
                 }
             });
         }
     }
 
+    public void showCursor(EditText editText) {
+        editText.setCursorVisible(true);
+        editText.requestFocus(); // 让光标得到焦点
+        editText.setSelection(editText.getText().length()); // 将光标置于文本的末尾
+    }
+
     /**
-     * 显示键盘
+     * 显示自定义键盘
      */
-    private void showSoftKeyboard() {
+    public void showSoftKeyboard() {
         //根据设置的输入类型，动态切换键盘
         int inputType = currentEditText.getInputType();
         Log.e("输入类型inputType=",inputType+"");
@@ -128,9 +163,11 @@ public class KeyboardViewManager implements KeyboardView.OnKeyboardActionListene
     }
 
     /**
-     * 隐藏键盘
+     * 隐藏自定义键盘
      */
     public void hideSoftKeyboard() {
+
+        Log.e("方法：","hideSoftKeyboard");
 
         if (frameLayout.getVisibility() == View.VISIBLE && hideing) {
             hideing = false;
@@ -167,7 +204,7 @@ public class KeyboardViewManager implements KeyboardView.OnKeyboardActionListene
 
         }
       //  currentEditText.setFocusable(false);
-        currentEditText.clearFocus();
+      //  currentEditText.clearFocus();
     }
 
 
@@ -222,6 +259,7 @@ public class KeyboardViewManager implements KeyboardView.OnKeyboardActionListene
 //                    shiftKeyboard();
 //                }
                 hideSoftKeyboard();
+                currentEditText.clearFocus();
                 break;
 
             case -4://完成按钮
@@ -230,6 +268,7 @@ public class KeyboardViewManager implements KeyboardView.OnKeyboardActionListene
                 if (editList.get(currentEditText) != null) {
                     editList.get(currentEditText).onSureClick();
                 }
+                currentEditText.clearFocus();
                 break;
 
 
@@ -290,7 +329,7 @@ public class KeyboardViewManager implements KeyboardView.OnKeyboardActionListene
         int keyboardTop = vLocation[1] + currentEditText.getHeight() / 2 + currentEditText.getPaddingBottom() + currentEditText.getPaddingTop();
         //输入框或基线View的到屏幕的距离 + 键盘高度 如果 超出了屏幕的承载范围, 就需要移动.
         int moveHeight = rect.bottom - keyboardTop - keyboardView.getHeight();
-        moveHeight = moveHeight > 0 ? 0 : moveHeight;
+        moveHeight = Math.min(moveHeight, 0);
         if (moveHeight != 0) {
             rootView.setTag("move");
             //遍历所有的子View，让其向上移动改移动的高度
@@ -336,11 +375,23 @@ public class KeyboardViewManager implements KeyboardView.OnKeyboardActionListene
         }
 
         public Builder showSystemKeyboard(EditText... editTexts) {
-            showSystem = Arrays.asList(editTexts);
+            showSystem.addAll(Arrays.asList(editTexts));
             for (int i = 0; i < editTexts.length; i++) {
                 editList.put(editTexts[i], null);
+               // editTexts[i].clearFocus();
             }
+
             return this;
+        }
+
+
+        public void hideSystemKeyboard(EditText... editTexts) {
+            showSystem.removeAll(Arrays.asList(editTexts));
+            for (int i = 0; i < editTexts.length; i++) {
+                editList.remove(editTexts[i]);
+                //editTexts[i].clearFocus();
+            }
+
         }
 
         public KeyboardViewManager build(Context context1) {
